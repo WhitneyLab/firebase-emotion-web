@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Video Annotation Project</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/6.2.0/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/6.2.0/firebase-auth.js"></script>
+    <script defer src="/__/firebase/6.2.0/firebase-database.js"></script>
+    <script defer src="/__/firebase/6.2.0/firebase-firestore.js"></script>
+    <script defer src="/__/firebase/6.2.0/firebase-messaging.js"></script>
+    <script defer src="/__/firebase/6.2.0/firebase-storage.js"></script>
+    <!-- initialize the SDK after all desired features are loaded -->
+    <script defer src="/__/firebase/init.js"></script>
+
+    <style type="text/css" media="screen">
+      #consentForm {
+        width: 100%;
+        height: 90%;
+        resize: both;
+        overflow: auto;
+        margin-top: 5px;
+        margin-left: 10px;
+      }
+
+      #instructionDoc {
+        width: 100%;
+        height: 90%;
+        overflow: auto;
+        margin-top: 5px;
+        margin-left: 10px;
+      }
+
+      #videoContainer {
+        padding-right: 0px;
+        padding-left:0px;
+        position: relative;
+        height: 100%;
+        background-color: black;
+      }
+      
+      #emotionSpaceImage{
+        height:100%;
+        position: absolute;
+        z-index: 1;
+        overflow: hidden;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      #before_start{
+        width: 100%;
+        margin-right:5px;
+        margin-left:5px;
+        padding-right:200px; 
+      }
+      #getInfo{
+        width: 100%;
+        margin-right:5px;
+        margin-left:5px;
+        padding-right:200px; 
+      }
+      #instructionSide{
+        padding-left:5px; 
+        padding-right:5px; 
+      }
+
+      #imageTrack{
+        height: 250px;
+      }
+
+      .col-md-3{height: 100%}
+      .col-md-9{height: 100%}
+      .bottom-buffer { margin-bottom:10px; }
+      .top-buffer { margin-top:10px; }
+      .spaceText{
+        font-size: 12pt;
+      }
+      .formLabel{
+        font-size: 14pt;
+      }
+      .container{
+        width: 100%;
+        height: 100%;
+        padding-left:10px; 
+        padding-right:0px; 
+        
+      }
+      #uploading {
+        position:absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 0;
+        transform: translate(-50%, -50%);
+      }
+      body, html{
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      h3{
+        margin-top:5px;
+        margin-left:5px;
+      }
+      p{
+        margin-bottom: 0px;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <main class="container">
+      <!-- Consent form page-->
+      <div id="uploading" hidden="true"><h2>UPLOADING, PLEASE WAIT...</h2></div>
+      <div id="consent" class="page container">
+        <div class='row bottom-buffer col-md-3'>
+          <center><h3><u><b>Welcome!</b></u></h3></center>
+          <p class="spaceText"> <b>REQUIREMENTS</b>: Please only run this experiment using a computer-- not a cell phone or tablet. <b><u>GOOGLE CHROME BROWSER</u></b> IS REQUIRED. This experiment does not work with other browsers.</p>
+          <br>
+          <p class="spaceText"> <b>IMPORTANT</b>: Please drag the corners of your browser to fill the entire screen. This text has to be on the <b>LEFT</b> relative to the consent form (not on top). </p>
+          <br>
+          <input id="consent_yes" name="consent" type="radio" value="yes"/> I agree<br />
+          <input id="consent_no" name="consent" type="radio" value="no" /> I don&#39;t agree<br />
+
+          <p class="spaceText"> Click 'I agree' if you read and agree to the consent form, then click 'Accept & Begin' to start. </p>
+
+          <button disabled type="button" id="agreeAndStart" class="btn btn-lg btn-primary">Accept & Begin</button>
+        </div>
+
+        <div class='row bottom-buffer col-md-9'>
+          <center><h3><u><b>Consent Form</b></u></h3></center>
+          <iframe frameborder="1" id="consentForm" src="https://drive.google.com/file/d/1rF3x1rPnDgJTznPsvDHYyNLYmRBbkrWN/preview"></iframe>
+        </div>
+      </div>
+
+      <!-- Instruction page 1-->
+      <div id="before_start" class="page container">
+          <h3><u>Before You Start</u></h3>
+          <h4>Please read the following instructions carefully: </h4>
+          <p class="spaceText"> Welcome! We are psychologists studying how humans perceive other people's emotions. You will be asked to watch video clips and perform a task while watching the video. Please try your best and update your judgment in real time. </p>
+          <ul>
+            <li><p class="spaceText">There are <span class='totalNumber'> </span> trials/videos maximum in this experiments. <b><u>Finishing all videos should take about <span class='totalTime'> </span> minutes.</u></b> We will record how much time you are active in our experiment. Please try to finish all the trials if possible. However, the most important thing is that you perform the task accurately.</li>
+            <li><p class="spaceText">Please pay full attention to the experiment. The quality of the data is very important to us. <b><u>Pleaes don't use your cell phone or try to multi-task while doing the experiment. </u></b></p></li>
+            <li><p class="spaceText">Please do not close the web page before you finish the experiment. If you accidentally exit the experiment, you can resume the experiment by entering your Berkeley email, and then the program will load your progress. </p></li>
+            <li><p class="spaceText">You can receive full credits only if you participate for the full <span class='totalTime'> </span> minutes or complete all the trials. Your data will be kept confidential.</p></li>
+          </ul>
+          <p class="spaceText"> When you finish the whole experiment, you will receive a code to send to the researcher by email. We will verify your progress and the time you spent, and assign you credits in 1-2 days.</p>
+          <p class="spaceText"> Click 'Next' to view the next page. </p>
+          <button id="showInstruction" type="button" class="btn btn-lg btn-primary">Next </button>
+      </div>
+
+      <!-- Instruction page 2-->
+      <div id="instructions" class="page container">
+        <div id = 'instructionSide' class='row bottom-buffer col-md-3'>
+          <h3><u>Instructions</u></h3>
+          <p class="spaceText"><b>IMPORTANT</b>: Please read the document on the right carefully for instructions. If you don't read, you will NOT understand the instructions thoroughly and you will NOT be able to finish the experiment. </p>
+          <br/>
+          <p class="spaceText"> Please make sure that you read all instructions by scrolling down to the bottom of the document. You will have at least 3 minutes to read. </p>
+          <br/>
+          <p class="spaceText"> Click 'Next' to proceed when you finish reading the instructions. </p> 
+          <br/>
+          <button disabled id="showSubjectInfo" type="button" class="btn btn-lg btn-primary">Next</button>
+        </div>
+        <div class='row bottom-buffer col-md-9'>
+          <iframe frameborder="1" id="instructionDoc" src=" "></iframe>
+        </div>
+      </div>
+
+      <!-- collect subject info-->
+      <div id="getInfo" class="page container">
+        <div class='row bottom-buffer'>
+          <h3><u> Participant Information </u></h3>
+          <p class="spaceText">Please enter your email as username. Please double check if your email address is correct before you submit. We use it for the purpose of saving progress.</p>
+        </div>
+        
+        <form id='infoForm'>
+          <div id="email" class="formField row bottom-buffer">
+            <span class="formLabel" >Email:</span>
+            <input id='email-input' type="text" name="email" size="50" value="">
+          </div>
+          <div class="formField row bottom-buffer">
+            <span class="formLabel">Age:</span>
+            <input type="text" name="age">
+          </div>
+          <div class="formField row bottom-buffer">
+            <span class="formLabel">Gender:</span>
+            <select name="gender" ><option value=""></option><option value="0">Male</option><option value="1">Female</option> <option value="2">Other</option> </select>
+          </div>
+          <div class="formField row bottom-buffer">
+            <span class="formLabel">Expected year of graduation:</span>
+            <input type="text" name="yearsGraduate">
+          </div>
+        </form>
+        <div class="row bottom-buffer">
+          <p class="spaceText" id = "formText"> Please note that your information is handled as absolutely confidential. </p>
+        </div>
+        <button id="submitForm" type="button" class="btn btn-lg btn-primary">Submit</button>
+      </div>
+
+      <!-- Video player page -->
+      <div id="annotation" class="page container">
+        <div class='col-xs-3'>
+          <h3>Trial <span id='trialNumber'></span> out of <span class='totalNumber'> </span> in total</h3>
+          <div id='instructionsButton'>
+              <a id = 'viewInstructionButton' href="https://docs.google.com/document/d/1B86DZ3aon9Cw7EH6wOEYoz339kHx9f6iLfaHyHofWfo/edit?usp=sharing" class="btn btn-default" target="_blank">Click to view instructions again.</a>
+          </div>
+          <br>
+          <p class="spaceText" id = 'InstructionBaseline'> Your task is to track the real emotions of <u><b>the following person</b></u> while watching the video. Please only <u><b>track this character</b></u> (but <u><b>NOT</b></u> other characters <u><b>NOR</b></u> the general emotion of the clip) <u><b>in real-time.</b></u></p>
+
+          <br>
+          <p class ='spaceText' id = 'characterInvisible'>Even when the character is not on the screen, <u><b>continue tracking and guess the emotion using other information</b></u>.</p>
+          <br>
+
+          <img id = 'imageTrack' src='https://storage.googleapis.com/targetpics/Exp2_pra.png'/>
+
+          <div id='VideoReady'>
+            <p class="spaceText"> <u><b>TO START:</b></u> move the mouse to the video center (the red cross), click on it and then press down the <b>ENTER</b> key on your keyboard. If there is any problem (e.g. error loading a video), please email zhimin@berkeley.edu.</p>
+            <br>
+          </div>
+          
+          <div id='VideoPlaying' hidden>
+            <p class="spaceText"> <u><b>THE VIDEO IS PLAYING</b></u>. Please pay attention to it.</p>
+            <br>
+          </div>
+
+          <div id='MovieInstruction' hidden>
+            <p class="spaceText"> Please track the emotion <u><b>CLOSELY</b></u> and move the mouse <u><b>CONTINUOUSLY</b></u></p>
+            <br>
+          </div>
+
+          <div id='VideoStart' hidden>
+            <p class="spaceText"> The video has paused. Put the mouse point at the video center (the red cross) and then press the <u><b>ENTER</b></u> key to start</p>
+          </div>
+          
+      </div>
+        <div id='videoContainer' class='col-xs-9'>
+          <video id = 'videoPlayer' preload="auto" muted="muted">
+            <source src="https://storage.googleapis.com/practicevideos/Exp2_pra_baseline_1cbr_30fps_withAudio.mp4"></video>
+          <img id = 'gratingGrid' src='https://storage.googleapis.com/ratinggridpic/Rating_grid_rightPos.png'/>
+          <canvas id='gridCanvas'></canvas>
+        </div>
+      </div>
+
+      <!-- Survey after trial -->
+      <div id="PostTrialSurvey" class="page container">
+        <h3>Feedback</h3>
+        <p class="spaceText" id="encourage1" hidden>You did a great job of tracking the emotion closely! </p>
+        <p class="spaceText" id="encourage2" hidden>You did an excellent job of tracking closely! </p>
+        <p class="spaceText" id="encourage3" hidden>Outstanding work! We appreciate your contribution. </p>
+        <p class="spaceText" id="encourage4" hidden>Brilliant job! Please keep going. </p>
+        <p class="spaceText" id="encourage5" hidden>Your continous tracking data is wonderful! Thank you! </p>
+        <p class="spaceText" id="badJob1" hidden>The longest time you have not moved the red pointer is <b><span id='longestTimeStill'> </span> seconds </p></b>
+        <p class="spaceText" id="badJob2" hidden>Your performance was not ideal. Please stay focused and track the emotion more closely.</p>
+        <h3>Post-trial Survey</h3>
+        <form id='surveyForm'>
+
+          <div class="formField row bottom-buffer">
+            <span class="formLabel"> Question 1: Have you ever watched this particular video clip before participating in the experiment?</span>
+            <select name="seenOrNot" ><option value=""></option><option value="0">Yes</option><option value="1">No</option> <option value="2">Not sure</option> </select>
+          </div>
+
+          <div class="formField row bottom-buffer">
+            <span class="formLabel">Question 2: Please rate your level of familiarity towards the video clip you just watched: </span>
+            <select name="Familiarity" ><option value=""></option><option value="1">1-Not at all familiar</option><option value="2">2-Slightly familiar</option> <option value="3">3-Somewaht familiar</option> <option value="4">4-Moderately familiar</option><option value="5">5-Extremely familiar</option></select>
+          </div>
+
+          <div class="formField row bottom-buffer">
+            <span class="formLabel">Question 3: Please rate how confident you were tracking the emotions in this trial: </span>
+            <select name="Confidence" ><option value=""></option><option value="1">1-Not at all confident </option><option value="2">2-Not confident</option> <option value="3">3-Somewhat confident, with some errors</option> <option value="4">4-Confident</option><option value="5">5-Very confident </option></select>
+          </div>
+
+          <div class="formField row bottom-buffer">
+            <span class="formLabel">Question 4: Was the video playing smoothly without stopping or lagging during this trial? </span>
+            <select name="Internet" ><option value=""></option><option value="1">1-Yes, very smoothly </option><option value="2">2-No, sometimes not smooth </option> <option value="3">3-No, always not smooth.</option> </select>
+          </div>
+
+          <button id="submitTrial" type="button" class="btn btn-lg btn-primary">Next trial</button>
+        </div>
+
+      <!-- between trial transition page -->
+      <div id="emotionSpace" class="page container">
+        <div class='col-xs-3'>
+          <div id = "emotionSpaceInstruction">
+            <h3>Before you start:</h3>
+            <p class="spaceText"> Please be familiar with the valence and arousal space on the right before you proceed.</p>
+            <br/>
+            <p class="spaceText"> You will rate the emotion in two dimensions: Valence refers to how positive or negative a person is, and arousal reflects whether a person is exciting/agitating or calming/soothing. Example words with their locations are shown, indicating their approximate ratings. </p>
+          </div>
+          <br/>
+          <p class="spaceText"> Click the button to start a trial. </p>
+          <br/>
+          <button id="startTrial" type="button" class="btn btn-lg btn-primary">Start new trial</button>
+        </div>
+
+        <div id='videoContainer' class='col-xs-9'>
+            <img id = 'emotionSpaceImage' src='https://storage.googleapis.com/ratinggridpic/arousal_valence_rightPos.png'/>
+        </div>
+      </div>
+
+      <!-- End of experiment -->
+      <div id="EndingExp" class="page container">
+        <h3><u>You have finished the experiment!</u></h3>
+        <p class="spaceText"> Thank you so much!</p>
+        <p class="spaceText"> Your random sequence of digits is <span class='randomID'> </span>. 
+        <p class="spaceText"> Please send this sequence of digits to <b>chenzhimin@berkeley.edu</b> with a title <u><b>'Completed Tracking Experiment'</b></u>. We will verify your progress and the time you spent, and assign you credits in 1-2 days. If you encountered any problem or have any suggestion, also feel free to contact the researcher. We appreciate your feedback!</p>
+        <p class="spaceText"> If you like our experiment, please recommend it to your classmates and friends. We do need a lot of participants. Thank you!!!</p> 
+        <p class="spaceText"> You can close the web page now.</p> 
+      </div>
+
+    </main>
+  </body>
+  <script defer src="moment.min.js"></script>
+  <script defer src="lodash.js"></script>
+  <script defer src="index.js"></script>
+
+</html>
